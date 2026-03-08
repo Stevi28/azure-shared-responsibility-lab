@@ -34,7 +34,7 @@ variable "bastion_outbound_nsg_rules" {
     }))
     default = [
         { name = "AllowRDPSSH", priority = 130, port = ["3389", "22"], destination = "VirtualNetwork" },
-        { name = "AllowAzureCloud", priority = 140, port = "443", destination = "AzureCloud" },
-        { name = "AllowSessionInfo", priority = 150, port = "80", destination = "Internet" }
+        { name = "AllowAzureCloud", priority = 140, port = ["443"], destination = "AzureCloud" },
+        { name = "AllowSessionInfo", priority = 150, port = ["80"], destination = "Internet" }
     ]
 }
