@@ -157,23 +157,26 @@ resource "azurerm_network_interface" "vm_nic" {
 }
 # Virtual machine
 resource "azurerm_windows_virtual_machine" "vm" {
-  name = "win-lab-vm"
-  resource_group_name = azurerm_resource_group.rg.name
-  location = azurerm_resource_group.rg.location
-  size = "Standard_B2s"
-  admin_username = "adminuser"
-  admin_password = "Ttesting123456"
+  name                  = "win-lab-vm"
+  resource_group_name   = azurerm_resource_group.rg.name
+  location              = azurerm_resource_group.rg.location
+  size                  = "Standard_B2s"
+  admin_username        = "adminuser"
+  admin_password        = "Ttesting123456"
   network_interface_ids = [azurerm_network_interface.vm_nic.id]
 
   os_disk {
-    caching = "ReadWrite"
+    caching              = "ReadWrite"
     storage_account_type = "Premium_LRS" 
   }
 
   source_image_reference {
     publisher = "MicrosoftWindowsServer"
-    offer = "WindowsServer"
-    sku = "2025-datacenter-azure-edition"
-    version = "latest"
+    offer     = "WindowsServer"
+    sku       = "2025-datacenter-azure-edition"
+    version   = "latest"
   }
+  # For this image sku -> Hotpatch-compatible image
+  patch_mode          = "AutomaticByPlatform"
+  hotpatching_enabled = true
 }
