@@ -142,7 +142,44 @@ resource "azurerm_bastion_host" "bastion" {
   }
 }
 
-# 7. Windows VM (B2s, Premium SSD)
+# receive info for current account (needed for Access Policy)
+data "azurerm_client_config" "current" {}
+
+# 7. Keyvault creation
+resource "azurerm_key_vault" "kv" {
+  name                        = "kv-lab-secrets-001"
+  location                    = azurerm_resource_group.rg.location
+  resource_group_name         = azurerm_resource_group.rg.name
+  enabled_for_disk_encryption = true
+  tenant_id                   = data.azurerm_client_config.current.tenant_id
+  soft_delete_retention_days  = 7
+  sku_name                    = "standard"
+
+  # Access policy for Read/Write actions of Service Principal (Github)
+  access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = data.azurerm_client_config.current.object_id
+
+    secret_permissions = [
+      "Get", "List", "Set", "Delete", "Purge"
+    ]
+  }
+}
+# Store the password as secret in the kv
+resource "azurerm_key_vault_secret" "vm_password" {
+  name = "vmpassword"
+  value = var.vm_admin_password # from Github secret
+  key_vault_id = azurerm_key_vault.kv.id
+}
+
+# Store the username as secret in the kv
+resource "azurerm_key_vault_secret" "vm_username" {
+  name = "vmusername"
+  value = var.vm_username # from Github secret
+  key_vault_id = azurerm_key_vault.kv.id
+}
+
+# 8. Windows VM (B2s, Premium SSD)
 # NIC
 resource "azurerm_network_interface" "vm_nic" {
   name                = "vm-nic"
@@ -161,8 +198,8 @@ resource "azurerm_windows_virtual_machine" "vm" {
   resource_group_name   = azurerm_resource_group.rg.name
   location              = azurerm_resource_group.rg.location
   size                  = "Standard_B2s"
-  admin_username        = "adminuser"
-  admin_password        = var.admin_password #use of variable instead of plain text
+  admin_username        = azurerm_key_vault_secret.vm_username.value
+  admin_password        = azurerm_key_vault_secret.vm_password.value
   network_interface_ids = [azurerm_network_interface.vm_nic.id]
 
   os_disk {

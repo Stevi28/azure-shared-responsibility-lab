@@ -39,8 +39,14 @@ variable "bastion_outbound_nsg_rules" {
     ]
 }
 
-variable "admin_password" {
+variable "vm_admin_password" {
     description = "The password for the Windows VM admin user"
+    type        = string
+    sensitive   = true # hides the value from Terraform logs
+}
+
+variable "vm_username" {
+    description = "The username for the Windows VM admin user"
     type        = string
     sensitive   = true # hides the value from Terraform logs
 }
